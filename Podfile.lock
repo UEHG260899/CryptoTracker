@@ -1,5 +1,8 @@
 PODS:
   - Alamofire (5.5.0)
+  - Charts (3.6.0):
+    - Charts/Core (= 3.6.0)
+  - Charts/Core (3.6.0)
   - EFCountingLabel (5.1.4)
   - MaterialComponents/AnimationTiming (124.2.0)
   - MaterialComponents/Availability (124.2.0)
@@ -78,6 +81,7 @@ PODS:
 
 DEPENDENCIES:
   - Alamofire
+  - Charts
   - EFCountingLabel
   - MaterialComponents/Cards
   - "MaterialComponents/TextControls+OutlinedTextFields"
@@ -89,6 +93,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - Alamofire
+    - Charts
     - EFCountingLabel
     - MaterialComponents
     - MDFInternationalization
@@ -100,6 +105,7 @@ SPEC REPOS:
 
 SPEC CHECKSUMS:
   Alamofire: 1c4fb5369c3fe93d2857c780d8bbe09f06f97e7c
+  Charts: b1e3a1f5a1c9ba5394438ca3b91bd8c9076310af
   EFCountingLabel: 210620994a2d54759f53034b5bda4642255969c7
   MaterialComponents: 1a9b2d9d45b1601ae544de85089adc4c464306d4
   MDFInternationalization: d697c55307816222a55685c4ccb1044ffb030c12
@@ -109,6 +115,6 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 6fc109f9c2a82ab44510fff410b88b1a6c271ee8
   SkeletonView: 915a80ecc2b6421ab7ac0f0212321c0cc1406472
 
-PODFILE CHECKSUM: 55b3657bbbba29f8d17225e42a139303f8af7adc
+PODFILE CHECKSUM: c4a4745ac896aaa586bd8ceecbec09c2f80ba4bd
 
 COCOAPODS: 1.11.2
