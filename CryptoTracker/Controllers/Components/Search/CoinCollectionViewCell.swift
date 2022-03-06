@@ -12,14 +12,15 @@ protocol CoinCollectionViewCellDelegate {
     func onClicked(coindId: String)
 }
 
-class CoinCollectionViewCell: UICollectionViewCell, ReuseView {
+class CoinCollectionViewCell: UICollectionViewCell {
 
+    static let identifier = "CoinCollectionViewCell"
 
     @IBOutlet weak var cardView: MDCCard!
     @IBOutlet weak var gradientView: UIView!
     @IBOutlet weak var coinImage: UIImageView!
     @IBOutlet weak var coinNameLbl: UILabel!
-
+    
     public var delegate: CoinCollectionViewCellDelegate?
     public var coindId: String!
 

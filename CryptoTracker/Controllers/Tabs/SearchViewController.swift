@@ -18,11 +18,10 @@ class SearchViewController: UIViewController {
     private let collectionInsets: CGFloat = 10
     private let collectionSideContraints: CGFloat = 20
     private var screenWidth: CGFloat = UIScreen.main.bounds.width
-    let searchViewModel = SearchViewModel()
+    private var coins = [Coin]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        bindData()
         setupSearchField()
         setupCollectionView()
     }
@@ -32,24 +31,19 @@ class SearchViewController: UIViewController {
         self.navigationController?.topViewController?.title = "Search a Coin"
         showSkeletonView()
         DispatchQueue.global(qos: .userInitiated).async {
-            self.searchViewModel.fetchCoins()
-        }
-    }
-}
-
-// MARK: - Extensions
-private extension SearchViewController {
-    func bindData() {
-        searchViewModel.coins.bind { coins in
-            if coins != nil {
-                DispatchQueue.main.async {
-                    self.collectionView.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.2))
-                }
-            }
+            self.fetchCoins()
         }
     }
 
-    func setupSearchField() {
+    private func showSkeletonView() {
+        collectionView.showGradientSkeleton(usingGradient: .init(baseColor: UIColor(named: "MainColor")!,
+                                                                 secondaryColor: UIColor(named: "SecondaryColor")!),
+                                                                 animated: true,
+                                                                 delay: 0,
+                                                                 transition: .crossDissolve(0.25))
+    }
+
+    private func setupSearchField() {
         searchTextField.label.text = "Search"
         searchTextField.setOutlineColor(UIColor(named: "MainColor")!, for: .normal)
         searchTextField.setOutlineColor(UIColor(named: "MainColor")!, for: .editing)
@@ -62,43 +56,71 @@ private extension SearchViewController {
         searchTextField.delegate = self
     }
 
-    func setupCollectionView() {
-        collectionView.register(CoinCollectionViewCell.nibName,
-                                forCellWithReuseIdentifier: CoinCollectionViewCell.viewIdentifier)
+    private func setupCollectionView() {
+        collectionView.register(UINib(nibName: CoinCollectionViewCell.identifier, bundle: nil),
+                                forCellWithReuseIdentifier: CoinCollectionViewCell.identifier)
         collectionView.delegate = self
         collectionView.dataSource = self
     }
 
-    func showSkeletonView() {
-        collectionView.showGradientSkeleton(usingGradient: .init(baseColor: UIColor(named: "MainColor")!,
-                                                                 secondaryColor: UIColor(named: "SecondaryColor")!),
-                                                                 animated: true,
-                                                                 delay: 0,
-                                                                 transition: .crossDissolve(0.25))
+    private func fetchCoins() {
+        CoinList.fetchCoins { response in
+            guard let coinList = response else {
+                return
+            }
+
+            if coinList.status != "success" {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.coins = coinList.data!.coins
+                self.collectionView.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.2))
+            }
+        }
+    }
+
+    private func filterResults(_ query: String) {
+        showSkeletonView()
+        DispatchQueue.global(qos: .userInitiated).async {
+            CoinList.searchForCoins(query: query) { response in
+                guard let coins = response else {
+                    return
+                }
+
+                if coins.status != "success" {
+                    return
+                }
+
+                self.coins = coins.data!.coins
+                DispatchQueue.main.async {
+                    self.collectionView.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.2))
+                }
+            }
+        }
     }
 }
 
-// MARK: - Delegates
+// MARK: - Extensions
 extension SearchViewController: UICollectionViewDelegate,
                                     SkeletonCollectionViewDataSource,
                                 UICollectionViewDelegateFlowLayout {
 
     func collectionSkeletonView(_ skeletonView: UICollectionView, cellIdentifierForItemAt indexPath: IndexPath) -> ReusableCellIdentifier {
-        return CoinCollectionViewCell.viewIdentifier
+        return CoinCollectionViewCell.identifier
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return searchViewModel.coins.value?.count ?? 0
+        return coins.count
     }
 
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CoinCollectionViewCell.viewIdentifier,
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CoinCollectionViewCell.identifier,
                                                       for: indexPath) as? CoinCollectionViewCell
         cell?.delegate = self
-        cell?.coindId = searchViewModel.coins.value![indexPath.row].uuid
-        cell?.displayData(name: searchViewModel.coins.value![indexPath.row].name,
-                          imgUrl: searchViewModel.coins.value![indexPath.row].iconUrl)
+        cell?.coindId = coins[indexPath.row].uuid!
+        cell?.displayData(name: coins[indexPath.row].name, imgUrl: coins[indexPath.row].iconUrl)
         return cell!
     }
 
@@ -124,13 +146,7 @@ extension SearchViewController: UITextFieldDelegate {
             return false
         }
         textField.resignFirstResponder()
-        showSkeletonView()
-
-        if text.isEmpty {
-            searchViewModel.fetchCoins()
-        } else {
-            searchViewModel.filterResults(query: text)
-        }
+        filterResults(text)
 
         return true
     }

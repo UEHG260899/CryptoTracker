@@ -13,7 +13,7 @@ protocol ExchangesTableViewCellDelegate {
     func onClicked(exchangeId: String)
 }
 
-class ExchangesTableViewCell: UITableViewCell, ReuseView {
+class ExchangesTableViewCell: UITableViewCell {
 
     @IBOutlet weak var cardView: MDCCard!
     @IBOutlet weak var exchangeImg: UIImageView!
@@ -22,6 +22,7 @@ class ExchangesTableViewCell: UITableViewCell, ReuseView {
     public var delegate: ExchangesTableViewCellDelegate?
     private var exchangeId: String!
 
+    static let identifier: String = "ExchangesTableViewCell"
 
     override func awakeFromNib() {
         super.awakeFromNib()
