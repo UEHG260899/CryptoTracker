@@ -114,7 +114,9 @@ extension SearchViewController: UICollectionViewDelegate,
 
 extension SearchViewController: CoinCollectionViewCellDelegate {
     func onClicked(coindId: String) {
-        // TODO: Redirect to other view
+        let vc = CoinInfoViewController(nibName: "CoinInfoViewController", bundle: .main)
+        vc.coinViewModel.coindId = coindId
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
