@@ -4,7 +4,6 @@
 //
 //  Created by Uriel Hernandez Gonzalez on 31/01/22.
 //
-// swiftlint:disable force_cast
 
 import UIKit
 import MaterialComponents.MaterialCards
@@ -25,20 +24,18 @@ class HomeViewController: UIViewController {
     @IBOutlet weak var marketCapLbl: EFCountingLabel!
     @IBOutlet weak var lastDayVolume: EFCountingLabel!
 
-    let homeViewModel = HomeViewModel()
-
     private let formatter: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.numberStyle = .decimal
         numberFormatter.decimalSeparator = ","
         return numberFormatter
     }()
+    private var exchanges = [Exchange]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCards()
         setupTable()
-        bindData()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -46,27 +43,10 @@ class HomeViewController: UIViewController {
         self.navigationController?.topViewController?.title = "Home"
         showSkeletonView()
         DispatchQueue.global(qos: .userInitiated).async {
-            self.homeViewModel.fetchStats()
+            self.fetchStats()
         }
         DispatchQueue.global(qos: .userInitiated).async {
-            self.homeViewModel.fetchExchanges()
-        }
-    }
-
-    private func bindData() {
-        homeViewModel.exchanges.bind { exchanges in
-            if exchanges != nil {
-                DispatchQueue.main.async {
-                    self.tableView.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.2))
-                }
-            }
-        }
-        homeViewModel.stats.bind { stats in
-            if stats != nil {
-                DispatchQueue.main.async {
-                    self.showData()
-                }
-            }
+            self.fetchExchanges()
         }
     }
 
@@ -100,20 +80,57 @@ class HomeViewController: UIViewController {
         tableView.allowsSelection = false
         tableView.tableFooterView = UIView()
         tableView.separatorStyle = .none
-        tableView.register(ExchangesTableViewCell.nibName,
-                           forCellReuseIdentifier: ExchangesTableViewCell.viewIdentifier)
+        tableView.register(UINib(nibName: "ExchangesTableViewCell", bundle: nil),
+                           forCellReuseIdentifier: ExchangesTableViewCell.identifier)
     }
 
-    private func showData() {
+    private func fetchStats() {
+        Stats.fetchStats { response in
+            guard let stats = response else {return}
 
-        let statsData = homeViewModel.getStatsData()
+            if stats.status != "success" {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.showData(for: stats.data!)
+            }
+        }
+    }
+
+    private func fetchExchanges() {
+        ExchangesList.fetchExchanges { response in
+            guard let exchanges = response else {
+                return
+            }
+
+            if exchanges.status != "success" {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.exchanges = exchanges.data!.exchanges
+                self.tableView.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.2))
+            }
+        }
+    }
+
+    private func showData(for stats: Stats) {
+
+        guard let totalCoins = stats.totalCoins,
+              let totalMarkets = stats.totalMarkets,
+              let exchanges = stats.totalExchanges,
+              let marketCap = stats.totalMarketCap,
+              let lastDayVolumeStat = stats.lastDayVolume else {
+                  return
+              }
 
         hideSkeletonView()
-        coinsLbl.countFromZeroTo(CGFloat(statsData.totalCoins), withDuration: 0.7)
-        marketsLbl.countFromZeroTo(CGFloat(statsData.totalMarkets), withDuration: 0.7)
-        exchangesLbl.countFromZeroTo(CGFloat(statsData.totalExchanges), withDuration: 0.7)
-        marketCapLbl.countFromZeroTo(CGFloat(formatter.number(from: statsData.totalMarketCap)!), withDuration: 0.7)
-        lastDayVolume.countFromZeroTo(CGFloat(formatter.number(from: statsData.lastDayVolume)!), withDuration: 0.7)
+        coinsLbl.countFromZeroTo(CGFloat(totalCoins), withDuration: 0.7)
+        marketsLbl.countFromZeroTo(CGFloat(totalMarkets), withDuration: 0.7)
+        exchangesLbl.countFromZeroTo(CGFloat(exchanges), withDuration: 0.7)
+        marketCapLbl.countFromZeroTo(CGFloat(formatter.number(from: marketCap)!), withDuration: 0.7)
+        lastDayVolume.countFromZeroTo(CGFloat(formatter.number(from: lastDayVolumeStat)!), withDuration: 0.7)
 
         for label in [coinsLbl, marketsLbl, exchangesLbl, marketCapLbl, lastDayVolume] {
             label?.setUpdateBlock({ value, sender in
@@ -128,20 +145,20 @@ class HomeViewController: UIViewController {
 
 extension HomeViewController: UITableViewDelegate, SkeletonTableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ExchangesTableViewCell.viewIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: ExchangesTableViewCell.identifier, for: indexPath)
                         as? ExchangesTableViewCell
-        cell?.displayExchangeData(for: (homeViewModel.exchanges.value?.exchanges?[indexPath.row])!)
+        cell?.displayExchangeData(for: exchanges[indexPath.row])
         cell?.delegate = self
         return cell!
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return homeViewModel.exchanges.value?.exchanges.count ?? 0
+        return exchanges.count
     }
 
     func collectionSkeletonView(_ skeletonView: UITableView,
                                 cellIdentifierForRowAt indexPath: IndexPath) -> ReusableCellIdentifier {
-        return ExchangesTableViewCell.viewIdentifier
+        return ExchangesTableViewCell.identifier
     }
 
 }
