@@ -11,11 +11,14 @@ import Charts
 class CoinInfoViewController: UIViewController {
 
     @IBOutlet weak var lineChart: LineChartView!
+    @IBOutlet weak var cardView: UIView!
+    @IBOutlet weak var favoriteBtn: UIButton!
     
     let coinViewModel = CoinInfoViewModel()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupUI()
         bindData()
     }
     
@@ -24,10 +27,29 @@ class CoinInfoViewController: UIViewController {
         coinViewModel.fetchCoinInfo(coinId: coinViewModel.coindId!)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        favoriteBtn.layer.cornerRadius = favoriteBtn.frame.height / 2
+    }
+
 }
 
 // MARK: - Extensions
 private extension CoinInfoViewController {
+
+    func setupUI() {
+        cardView.layer.cornerRadius = 20
+        cardView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        cardView.layer.shadowColor = UIColor(named: "MainColor")?.cgColor
+        cardView.layer.shadowRadius = 10
+        cardView.layer.shadowOpacity = 0.3
+        cardView.layer.shadowOffset = CGSize(width: 0, height: -10)
+        favoriteBtn.layer.shadowColor = UIColor(named: "MainColor")?.cgColor
+        favoriteBtn.layer.shadowRadius = 10
+        favoriteBtn.layer.shadowOpacity = 0.3
+        favoriteBtn.layer.shadowOffset = .zero
+    }
+
     func bindData() {
         coinViewModel.title.bind { coinName in
             if coinName != nil {

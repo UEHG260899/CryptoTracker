@@ -48,7 +48,7 @@ class API {
         let url = "\(coinRankingBaseUrl)search-suggestions?query=\(query)"
         requestGet(url: url, headers: coinRankingHeaders, parameters: nil, completion: completion)
     }
-    
+
     public func fetchCoinData(uuid: String, completion: @escaping (_ response: GenericResponse<CoinInfo>?) -> Void) {
         let url = "\(coinRankingBaseUrl)coin/\(uuid)"
         requestGet(url: url, headers: coinRankingHeaders, parameters: nil, completion: completion)
