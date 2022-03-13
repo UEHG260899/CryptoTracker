@@ -26,11 +26,12 @@ struct Coin: Codable {
     let sparkLine: [String]!
     let allTimeHigh: AllTimeHigh!
     let price: String!
-
+    
     enum CodingKeys: String, CodingKey {
-        case uuid, symbol, name, decription, color, iconUrl ,websiteUrl, supply, numberOfMarkets, numberOfExchanges,
-        lastDayVolume = "24hVolume",
-        marketCap, price, priceAt, change, rank, sparkLine, allTimeHigh
+        case uuid, symbol, name, decription, color, iconUrl, websiteUrl, supply, numberOfMarkets, numberOfExchanges,
+             lastDayVolume = "24hVolume",
+             sparkLine = "sparkline",
+             marketCap, price, priceAt, change, rank, allTimeHigh
     }
     
 }

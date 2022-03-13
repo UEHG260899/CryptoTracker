@@ -14,6 +14,7 @@ class CoinInfoViewController: UIViewController {
     @IBOutlet weak var cardView: UIView!
     @IBOutlet weak var favoriteBtn: UIButton!
     
+    var dataEntries: [ChartDataEntry] = [ChartDataEntry]()
     let coinViewModel = CoinInfoViewModel()
 
     override func viewDidLoad() {
@@ -58,9 +59,23 @@ private extension CoinInfoViewController {
         }
         coinViewModel.coin.bind { coin in
             if coin != nil {
-
+                self.obtainCoinPrices(coin!.sparkLine)
             }
         }
+    }
+
+    func obtainCoinPrices(_ dataPoints: [String]) {
+        for (idx, dataPoint) in dataPoints.enumerated() {
+            let point = ChartDataEntry(x: Double(idx), y: Double(dataPoint)!)
+            dataEntries.append(point)
+        }
+        displayChartData()
+    }
+
+    func displayChartData() {
+        let lineChartDataSet = LineChartDataSet(entries: dataEntries, label: nil)
+        let lineChartData = LineChartData(dataSet: lineChartDataSet)
+        lineChart.data = lineChartData
     }
 
 }
